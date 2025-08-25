@@ -13,7 +13,7 @@ const SEARCH_PATHS: &[&str] = &[
 ];
 const FILE_NAME: &str = formatcp!("{}.json", crate::PKG_NAME);
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub(crate) struct Configuration {
     pub(crate) charge_points: Vec<ChargePoint>,
 }
@@ -61,9 +61,17 @@ impl Configuration {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub(crate) struct ChargePoint {
     pub(crate) url: String,
     pub(crate) username: String,
     pub(crate) password: String,
+    pub(crate) observe: Vec<Property>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub(crate) struct Property {
+    pub(crate) name: String,
+    pub(crate) group_id: String,
+    pub(crate) value_id: String,
 }

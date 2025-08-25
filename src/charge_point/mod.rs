@@ -1,16 +1,17 @@
 mod response;
-mod status;
 
 use {
+    crate::configuration::Property,
     anyhow::{Context as _, Ok, Result},
     log::info,
-    status::Status,
+    std::collections::HashMap,
 };
 
 pub(crate) struct ChargePoint {
     client: reqwest::Client,
     url: reqwest::Url,
     token: String,
+    observe: Vec<Property>,
 }
 
 impl ChargePoint {
@@ -41,10 +42,11 @@ impl ChargePoint {
             client,
             url,
             token: response.token,
+            observe: configuration.observe.clone(),
         })
     }
 
-    pub(crate) async fn status(&self) -> Result<Status> {
+    pub(crate) async fn status(&self) -> Result<HashMap<String, Record>> {
         let response: response::status::Root = self
             .client
             .get(self.url.join("api/v1/Configuration/GetConfigurationPage?guid=6C0BE508-4ADE-4CB5-8C08-76CB4527CD89").unwrap())
@@ -56,6 +58,27 @@ impl ChargePoint {
             .await
             .context("Could not decode status response")?;
 
-        Ok(response.into())
+        Ok(HashMap::from_iter(self.observe.iter().filter_map(
+            |property| {
+                response
+                    .configurations_groups
+                    .get(&property.group_id)
+                    .and_then(|group| group.values.get(&property.value_id))
+                    .map(|value| (
+                        property.name.clone(),
+                        Record {
+                            timestamp: value.updated.clone(),
+                            value: value.value.clone()
+                        }
+                    ))
+            },
+        )))
     }
+}
+
+// TODO: Move this somewhere else
+#[derive(Debug)]
+pub(crate) struct Record {
+    pub(crate) timestamp: String,
+    pub(crate) value: serde_json::Value,
 }
