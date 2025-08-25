@@ -1,5 +1,4 @@
 mod charge_point;
-mod command_line;
 mod configuration;
 
 use {
