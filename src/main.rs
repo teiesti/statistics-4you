@@ -31,6 +31,15 @@ async fn try_main() -> Result<()> {
     // Load the configuration
     let configuration = Configuration::discover()?;
 
+    // Log in to the charge points
+    let charge_points = futures::future::try_join_all(
+        configuration
+            .charge_points
+            .iter()
+            .map(charge_point::ChargePoint::login),
+    )
+    .await?;
+
     // TODO
 
     Ok(())

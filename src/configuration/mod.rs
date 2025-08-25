@@ -15,7 +15,7 @@ const FILE_NAME: &str = formatcp!("{}.json", crate::PKG_NAME);
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Configuration {
-    charge_points: Vec<ChargePoint>,
+    pub(crate) charge_points: Vec<ChargePoint>,
 }
 
 impl Configuration {
@@ -62,8 +62,8 @@ impl Configuration {
 }
 
 #[derive(Debug, Deserialize)]
-struct ChargePoint {
-    url: String,
-    username: String,
-    password: String,
+pub(crate) struct ChargePoint {
+    pub(crate) url: String,
+    pub(crate) username: String,
+    pub(crate) password: String,
 }
