@@ -41,6 +41,10 @@ async fn try_main() -> Result<()> {
     .await?;
 
     // TODO
+    let statuses =
+        futures::future::try_join_all(charge_points.iter().map(charge_point::ChargePoint::status))
+            .await?;
+    info!("Charge point statuses: {:#?}", statuses);
 
     Ok(())
 }
