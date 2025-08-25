@@ -1,6 +1,6 @@
+mod charge_point;
 mod command_line;
 mod configuration;
-mod session;
 
 use {
     anyhow::{Result, bail},
