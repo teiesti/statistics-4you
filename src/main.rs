@@ -3,7 +3,8 @@ mod command_line;
 mod configuration;
 
 use {
-    anyhow::{Result, bail},
+    anyhow::Result,
+    configuration::Configuration,
     env_logger::Env,
     log::{error, info},
 };
@@ -27,8 +28,10 @@ async fn try_main() -> Result<()> {
     // Log the version
     info!("Starting {} {} ({})", PKG_NAME, PKG_VERSION, PKG_COMMIT);
 
-    // TODO
-    bail!("Not implemented");
+    // Load the configuration
+    let configuration = Configuration::discover()?;
 
-    // Ok(())
+    // TODO
+
+    Ok(())
 }
