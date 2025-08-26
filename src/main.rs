@@ -8,7 +8,7 @@ use {
     configuration::Configuration,
     env_logger::Env,
     log::{error, info},
-    std::path::Path,
+    std::{path::Path, time::Duration},
 };
 
 const PKG_NAME: &str = env!("CARGO_PKG_NAME");
@@ -42,18 +42,22 @@ async fn try_main() -> Result<()> {
     )
     .await?;
 
-    // TODO
-    let statuses =
-        futures::future::try_join_all(charge_points.iter().map(charge_point::ChargePoint::status))
-            .await?;
+    // TODO: Make this beautiful, use futures, add configuration options and logging
+    let mut interval = tokio::time::interval(Duration::from_secs(1));
+    loop {
+        let statuses = futures::future::try_join_all(
+            charge_points.iter().map(charge_point::ChargePoint::status),
+        )
+        .await?;
 
-    let mut database = Database::open(Path::new("./data").to_path_buf()).unwrap();
+        let mut database = Database::open(Path::new("./data").to_path_buf()).unwrap();
 
-    for status in statuses {
-        for (table, record) in status.into_iter() {
-            database.store(table, record).await?;
+        for status in statuses {
+            for (table, record) in status.into_iter() {
+                database.store(table, record).await?;
+            }
         }
-    }
 
-    Ok(())
+        interval.tick().await;
+    }
 }
