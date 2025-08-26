@@ -53,7 +53,7 @@ impl Database {
                     if needs_header {
                         needs_header = false;
                     } else {
-                        let mut columns = line.split(",").into_iter();
+                        let mut columns = line.split(",");
                         self.last_records.insert(
                             table.clone(),
                             Record {

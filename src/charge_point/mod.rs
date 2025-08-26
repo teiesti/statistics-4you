@@ -7,7 +7,6 @@ use {
     },
     anyhow::{Context as _, Ok, Result},
     log::info,
-    std::collections::HashMap,
 };
 
 pub(crate) struct ChargePoint {
@@ -37,8 +36,9 @@ impl ChargePoint {
             .context("Could not decode login response")?;
 
         info!(
-            "Successfully logged in to {}. The token is:\n{}",
-            configuration.url, response.token
+            "Successfully logged in to {}. The token ends in: {}",
+            configuration.url,
+            &response.token[response.token.len() - 8..]
         );
 
         Ok(Self {
@@ -49,7 +49,7 @@ impl ChargePoint {
         })
     }
 
-    pub(crate) async fn status(&self) -> Result<HashMap<Table, Record>> {
+    pub(crate) async fn status(&self) -> Result<impl Iterator<Item = (Table, Record)>> {
         let response: response::status::Root = self
             .client
             .get(self.url.join("api/v1/Configuration/GetConfigurationPage?guid=6C0BE508-4ADE-4CB5-8C08-76CB4527CD89").unwrap())
@@ -61,25 +61,23 @@ impl ChargePoint {
             .await
             .context("Could not decode status response")?;
 
-        Ok(HashMap::from_iter(self.observe.iter().filter_map(
-            |property| {
-                response
-                    .configurations_groups
-                    .get(&property.group_id)
-                    .and_then(|group| group.values.get(&property.value_id))
-                    .map(|value| {
-                        (
-                            Table {
-                                charge_point: self.url.host_str().unwrap().to_string(),
-                                property: property.name.clone(),
-                            },
-                            Record {
-                                timestamp: value.updated.clone(),
-                                value: value.value.to_string(),
-                            },
-                        )
-                    })
-            },
-        )))
+        Ok(self.observe.iter().filter_map(move |property| {
+            response
+                .configurations_groups
+                .get(&property.group_id)
+                .and_then(|group| group.values.get(&property.value_id))
+                .map(|value| {
+                    (
+                        Table {
+                            charge_point: self.url.host_str().unwrap().to_string(),
+                            property: property.name.clone(),
+                        },
+                        Record {
+                            timestamp: value.updated.clone(),
+                            value: value.value.to_string(),
+                        },
+                    )
+                })
+        }))
     }
 }

@@ -3,12 +3,13 @@ mod configuration;
 mod database;
 
 use {
-    crate::database::Database,
+    crate::{charge_point::ChargePoint, database::Database},
     anyhow::Result,
     configuration::Configuration,
     env_logger::Env,
+    futures::future::try_join_all,
     log::{error, info},
-    std::{path::Path, time::Duration},
+    std::time::Duration,
 };
 
 const PKG_NAME: &str = env!("CARGO_PKG_NAME");
@@ -33,8 +34,8 @@ async fn try_main() -> Result<()> {
     // Load the configuration
     let configuration = Configuration::discover()?;
 
-    // Log in to the charge points
-    let charge_points = futures::future::try_join_all(
+    // Establish a connection to the charge points
+    let charge_points = try_join_all(
         configuration
             .charge_points
             .iter()
@@ -42,18 +43,16 @@ async fn try_main() -> Result<()> {
     )
     .await?;
 
-    // TODO: Make this beautiful, use futures, add configuration options and logging
-    let mut interval = tokio::time::interval(Duration::from_secs(1));
-    loop {
-        let statuses = futures::future::try_join_all(
-            charge_points.iter().map(charge_point::ChargePoint::status),
-        )
-        .await?;
+    // Open the database
+    let mut database = Database::open(configuration.database)?;
 
-        let mut database = Database::open(Path::new("./data").to_path_buf()).unwrap();
+    // Query the charge points for their status
+    let mut interval = tokio::time::interval(Duration::from_secs(configuration.update_interval));
+    loop {
+        let statuses = try_join_all(charge_points.iter().map(ChargePoint::status)).await?;
 
         for status in statuses {
-            for (table, record) in status.into_iter() {
+            for (table, record) in status {
                 database.store(table, record).await?;
             }
         }

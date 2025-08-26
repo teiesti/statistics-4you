@@ -3,7 +3,12 @@ use {
     const_format::formatcp,
     log::{debug, info, trace},
     serde::Deserialize,
-    std::{env, fs::read_to_string, ops::Deref, path::Path},
+    std::{
+        env,
+        fs::read_to_string,
+        ops::Deref,
+        path::{Path, PathBuf},
+    },
 };
 
 const SEARCH_PATHS: &[&str] = &[
@@ -16,6 +21,8 @@ const FILE_NAME: &str = formatcp!("{}.json", crate::PKG_NAME);
 #[derive(Clone, Debug, Deserialize)]
 pub(crate) struct Configuration {
     pub(crate) charge_points: Vec<ChargePoint>,
+    pub(crate) database: PathBuf,
+    pub(crate) update_interval: u64,
 }
 
 impl Configuration {
