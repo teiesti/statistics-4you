@@ -1,7 +1,10 @@
 mod response;
 
 use {
-    crate::configuration::Property,
+    crate::{
+        configuration::Property,
+        database::{Record, Table},
+    },
     anyhow::{Context as _, Ok, Result},
     log::info,
     std::collections::HashMap,
@@ -46,7 +49,7 @@ impl ChargePoint {
         })
     }
 
-    pub(crate) async fn status(&self) -> Result<HashMap<String, Record>> {
+    pub(crate) async fn status(&self) -> Result<HashMap<Table, Record>> {
         let response: response::status::Root = self
             .client
             .get(self.url.join("api/v1/Configuration/GetConfigurationPage?guid=6C0BE508-4ADE-4CB5-8C08-76CB4527CD89").unwrap())
@@ -64,21 +67,19 @@ impl ChargePoint {
                     .configurations_groups
                     .get(&property.group_id)
                     .and_then(|group| group.values.get(&property.value_id))
-                    .map(|value| (
-                        property.name.clone(),
-                        Record {
-                            timestamp: value.updated.clone(),
-                            value: value.value.clone()
-                        }
-                    ))
+                    .map(|value| {
+                        (
+                            Table {
+                                charge_point: self.url.host_str().unwrap().to_string(),
+                                property: property.name.clone(),
+                            },
+                            Record {
+                                timestamp: value.updated.clone(),
+                                value: value.value.to_string(),
+                            },
+                        )
+                    })
             },
         )))
     }
-}
-
-// TODO: Move this somewhere else
-#[derive(Debug)]
-pub(crate) struct Record {
-    pub(crate) timestamp: String,
-    pub(crate) value: serde_json::Value,
 }

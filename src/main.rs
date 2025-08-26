@@ -1,11 +1,14 @@
 mod charge_point;
 mod configuration;
+mod database;
 
 use {
+    crate::database::Database,
     anyhow::Result,
     configuration::Configuration,
     env_logger::Env,
     log::{error, info},
+    std::path::Path,
 };
 
 const PKG_NAME: &str = env!("CARGO_PKG_NAME");
@@ -43,7 +46,14 @@ async fn try_main() -> Result<()> {
     let statuses =
         futures::future::try_join_all(charge_points.iter().map(charge_point::ChargePoint::status))
             .await?;
-    info!("Charge point statuses: {:#?}", statuses);
+
+    let mut database = Database::open(Path::new("./data").to_path_buf()).unwrap();
+
+    for status in statuses {
+        for (table, record) in status.into_iter() {
+            database.store(table, record).await?;
+        }
+    }
 
     Ok(())
 }
