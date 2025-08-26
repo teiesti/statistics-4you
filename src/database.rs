@@ -2,11 +2,9 @@ use {
     anyhow::{Ok, Result, bail},
     std::{
         collections::HashMap,
-        path::{Path, PathBuf},
-    },
-    tokio::{
         fs::{File, OpenOptions},
-        io::{AsyncBufReadExt as _, AsyncWriteExt, BufReader, BufWriter},
+        io::{BufRead as _, BufReader, BufWriter, Write as _},
+        path::{Path, PathBuf},
     },
 };
 
@@ -29,9 +27,10 @@ impl Database {
         })
     }
 
-    pub(crate) async fn store(&mut self, table: Table, record: Record) -> Result<()> {
+    pub(crate) fn store(&mut self, table: Table, record: Record) -> Result<()> {
         let file = match self.files.get_mut(&table) {
             Some(file) => file,
+
             None => {
                 let path = self.root.join(table.path());
 
@@ -41,15 +40,16 @@ impl Database {
                         .read(true)
                         .append(true)
                         .create(true)
-                        .open(&path)
-                        .await?,
+                        .open(&path)?,
                 );
 
                 let mut file = self.files.get_mut(&table).unwrap();
-                let mut lines = BufReader::new(&mut file).lines();
+                let lines = BufReader::new(&mut file).lines();
 
                 let mut needs_header = true;
-                while let Some(line) = lines.next_line().await? {
+                for line in lines {
+                    let line = line?;
+
                     if needs_header {
                         needs_header = false;
                     } else {
@@ -61,13 +61,13 @@ impl Database {
                                 value: columns.next().unwrap().parse().unwrap(),
                             },
                         );
+                        assert!(columns.next().is_none());
                     }
                 }
 
                 if needs_header {
                     let mut writer = BufWriter::new(&mut file);
-                    writer.write_all("timestamp,value\n".as_bytes()).await?;
-                    writer.flush().await?;
+                    writer.write_all("timestamp,value\n".as_bytes())?;
                 }
 
                 file
@@ -79,10 +79,7 @@ impl Database {
 
             _ => {
                 let mut writer = BufWriter::new(file);
-                writer
-                    .write_all(format!("{},{}\n", record.timestamp, record.value).as_bytes())
-                    .await?;
-                writer.flush().await?;
+                writer.write_all(format!("{},{}\n", record.timestamp, record.value).as_bytes())?;
 
                 self.last_records.insert(table, record);
             }

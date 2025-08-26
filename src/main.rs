@@ -53,7 +53,7 @@ async fn try_main() -> Result<()> {
 
         for status in statuses {
             for (table, record) in status {
-                database.store(table, record).await?;
+                database.store(table, record)?;
             }
         }
 
