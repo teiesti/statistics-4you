@@ -16,7 +16,7 @@
                     "value_id": "4f8f981c-f198-49fa-b653-790856129653"
                 }
             ]
-        },
+        }
     ],
     "database": "./data",
     "update_interval": 300
