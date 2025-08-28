@@ -1,0 +1,23 @@
+{
+    "charge_points": [
+        {
+            "url": "http://my-charge-point/",
+            "username": "User",
+            "password": "PASSWORD",
+            "observe": [
+                {
+                    "name": "meter_reading",
+                    "group_id": "6e59a702-f8af-41df-90ed-264641686a2d",
+                    "value_id": "d21f2563-ea12-44bf-a1b2-73b62255fc15"
+                },
+                {
+                    "name": "active_charging_scene",
+                    "group_id": "f0d3a233-98d5-4adf-ab67-2ab4a7b7eea4",
+                    "value_id": "4f8f981c-f198-49fa-b653-790856129653"
+                }
+            ]
+        },
+    ],
+    "database": "./data",
+    "update_interval": 300
+}
