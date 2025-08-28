@@ -50,6 +50,8 @@ impl ChargePoint {
     }
 
     pub(crate) async fn status(&self) -> Result<impl Iterator<Item = (Table, Record)>> {
+        info!("Fetching status from {}", self.url);
+
         let response: response::status::Root = self
             .client
             .get(self.url.join("api/v1/Configuration/GetConfigurationPage?guid=6C0BE508-4ADE-4CB5-8C08-76CB4527CD89").unwrap())
@@ -60,6 +62,8 @@ impl ChargePoint {
             .json()
             .await
             .context("Could not decode status response")?;
+
+        info!("Successfully fetched status from {}", self.url);
 
         Ok(self.observe.iter().filter_map(move |property| {
             response

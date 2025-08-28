@@ -48,6 +48,10 @@ async fn try_main() -> Result<()> {
 
     // Query the charge points for their status
     let mut interval = tokio::time::interval(Duration::from_secs(configuration.update_interval));
+    info!(
+        "The update interval was set to {} seconds",
+        configuration.update_interval
+    );
     loop {
         let statuses = try_join_all(charge_points.iter().map(ChargePoint::status)).await?;
 

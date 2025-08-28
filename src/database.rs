@@ -1,5 +1,6 @@
 use {
     anyhow::{Ok, Result, bail},
+    log::info,
     std::{
         collections::HashMap,
         fs::{File, OpenOptions},
@@ -16,6 +17,8 @@ pub(crate) struct Database {
 
 impl Database {
     pub(crate) fn open(path: PathBuf) -> Result<Self> {
+        info!("Opening database at {}", path.display());
+
         if !path.is_dir() {
             bail!("Cannot open database at {}", path.display())
         }
