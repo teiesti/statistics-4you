@@ -3,7 +3,7 @@ use {
     log::info,
     std::{
         collections::HashMap,
-        fs::{File, OpenOptions},
+        fs::{File, OpenOptions, create_dir_all},
         io::{BufRead as _, BufReader, BufWriter, Write as _},
         path::{Path, PathBuf},
     },
@@ -36,6 +36,8 @@ impl Database {
 
             None => {
                 let path = self.root.join(table.path());
+
+                create_dir_all(path.parent().unwrap())?;
 
                 self.files.insert(
                     table.clone(),
@@ -100,7 +102,7 @@ pub(crate) struct Table {
 
 impl Table {
     fn path(&self) -> PathBuf {
-        Path::new(&self.charge_point).join(&self.property)
+        Path::new(&self.charge_point).join(format!("{}.csv", &self.property))
     }
 }
 
