@@ -2,7 +2,7 @@
     "charge_points": [
         {
             "url": "http://my-charge-point/",
-            "username": "User",
+            "username": "Owner",
             "password": "PASSWORD",
             "observe": [
                 {
