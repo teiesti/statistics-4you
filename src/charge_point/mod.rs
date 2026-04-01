@@ -30,10 +30,10 @@ impl ChargePoint {
             .json(&serde_json::json!({ "username": configuration.username, "password": configuration.password }))
             .send()
             .await
-            .context("Could not send login request")?
+            .with_context(|| format!("Logging in to {} failed: Could not send request", configuration.url))?
             .json()
             .await
-            .context("Could not decode login response")?;
+            .with_context(|| format!("Logging in to {} failed: Could not decode response", configuration.url))?;
 
         info!(
             "Successfully logged in to {}. The token ends in: {}",
@@ -58,10 +58,10 @@ impl ChargePoint {
             .bearer_auth(&self.token)
             .send()
             .await
-            .context("Could not status response")?
+            .with_context(|| format!("Fetching status from {} failed: Could not send request", self.url))?
             .json()
             .await
-            .context("Could not decode status response")?;
+            .with_context(|| format!("Fetching status from {} failed: Could not decode response", self.url))?;
 
         info!("Successfully fetched status from {}", self.url);
 
