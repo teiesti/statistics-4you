@@ -1,0 +1,8 @@
+services:
+
+  statistics-4you:
+    image: statistics-4you:latest
+    container_name: statistics-4you
+    build: .
+    volumes:
+      - .:/app
