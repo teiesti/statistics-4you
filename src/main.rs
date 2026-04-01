@@ -44,6 +44,8 @@ async fn try_main() -> Result<()> {
         configuration.update_interval
     );
     loop {
+        interval.tick().await;
+
         // Establish a connection to the charge points
         // Note: This needs to be done in every iteration, because the token expires after some time and needs to be renewed
         let charge_points = try_join_all(
@@ -62,7 +64,5 @@ async fn try_main() -> Result<()> {
                 database.store(table, record)?;
             }
         }
-
-        interval.tick().await;
     }
 }
