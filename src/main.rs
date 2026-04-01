@@ -7,7 +7,7 @@ use {
     anyhow::Result,
     configuration::Configuration,
     env_logger::Env,
-    futures::future::try_join_all,
+    futures::{future::try_join_all},
     log::{error, info},
     std::time::Duration,
 };
@@ -34,15 +34,6 @@ async fn try_main() -> Result<()> {
     // Load the configuration
     let configuration = Configuration::discover()?;
 
-    // Establish a connection to the charge points
-    let charge_points = try_join_all(
-        configuration
-            .charge_points
-            .iter()
-            .map(charge_point::ChargePoint::login),
-    )
-    .await?;
-
     // Open the database
     let mut database = Database::open(configuration.database)?;
 
@@ -53,6 +44,17 @@ async fn try_main() -> Result<()> {
         configuration.update_interval
     );
     loop {
+        // Establish a connection to the charge points
+        // Note: This needs to be done in every iteration, because the token expires after some time and needs to be renewed
+        let charge_points = try_join_all(
+            configuration
+                .charge_points
+                .iter()
+                .map(charge_point::ChargePoint::login),
+        )
+        .await?;
+
+        // Query the status of the charge points and store it in the database
         let statuses = try_join_all(charge_points.iter().map(ChargePoint::status)).await?;
 
         for status in statuses {
