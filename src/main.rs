@@ -7,7 +7,7 @@ use {
     anyhow::Result,
     configuration::Configuration,
     env_logger::Env,
-    futures::{future::try_join_all},
+    futures::future::try_join_all,
     log::{error, info},
     std::time::Duration,
 };
